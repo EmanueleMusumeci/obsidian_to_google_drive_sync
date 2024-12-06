@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+# to simplify: remove this function
+notify() {
+  notify-send -i $1 "Obsync" "$2"
+}
+
+obsync() {
+
+  echo "Syncing with remote: $REMOTE_NAME, folder: $GDRIVE_FOLDER_NAME..."
+
+  # start the synchronization process
+  rclone bisync $LITERATURE_SYNC_PATH $REMOTE_NAME:$GDRIVE_FOLDER_NAME --remove-empty-dirs --progress &
+
+  # to simplify: remove this loop (incl. the "&" above)
+  while [[ -n $(jobs -r) ]]; do
+    notify $1 "$2"
+    sleep 4
+  done
+}
+
+# Ensure required environment variables are set
+if [[ -z "$REMOTE_NAME" || -z "$GDRIVE_FOLDER_NAME" ]]; then
+    echo "Error: REMOTE_NAME or GDRIVE_FOLDER_NAME environment variables are not set."
+    echo "Make sure init.sh has been sourced and settings.conf is configured properly."
+    exit 1
+fi
+
+# to simplify: replace everything below with "obsync && obsidian && obsync"
+obsync process-working "Preparing to launch Obsidian..."
+obsidian
+obsync drive-harddisk "Synchronizing with Google Drive..."
+notify face-wink "Synchronization successful."
